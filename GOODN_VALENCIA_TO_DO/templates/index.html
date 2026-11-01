@@ -1,0 +1,186 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>GPS Tracker</title>
+
+    <style>
+        * {
+            box-sizing: border-box;
+        }
+
+        body {
+            margin: 0;
+            padding: 40px 20px;
+            font-family: Arial, sans-serif;
+            background: #f5f5f5;
+            color: #222;
+        }
+
+        .container {
+            max-width: 550px;
+            margin: 0 auto;
+            background: white;
+            padding: 30px;
+            border-radius: 12px;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+        }
+
+        h2 {
+            margin: 0 0 8px;
+        }
+
+        #status {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 25px;
+        }
+
+        .data {
+            padding: 18px;
+            background: #f7f7f7;
+            border-radius: 8px;
+            margin-bottom: 12px;
+        }
+
+        .label {
+            font-size: 13px;
+            color: #777;
+            margin-bottom: 8px;
+        }
+
+        .value {
+            font-size: 24px;
+            font-weight: 600;
+            word-break: break-word;
+        }
+
+        .small {
+            font-size: 15px;
+        }
+
+        button {
+            width: 100%;
+            padding: 13px;
+            border: none;
+            border-radius: 7px;
+            background: #111;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+
+        button:hover {
+            background: #333;
+        }
+    </style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <h2>GPS Tracker</h2>
+    <p id="status">Connecting to Neon database...</p>
+
+    <div class="data">
+        <div class="label">Latitude</div>
+        <div class="value" id="latitude">--</div>
+    </div>
+
+    <div class="data">
+        <div class="label">Longitude</div>
+        <div class="value" id="longitude">--</div>
+    </div>
+
+    <div class="data">
+        <div class="label">IMEI</div>
+        <div class="value small" id="imei">--</div>
+    </div>
+
+    <div class="data">
+        <div class="label">Speed</div>
+        <div class="value" id="speed">--</div>
+    </div>
+
+    <div class="data">
+        <div class="label">Battery</div>
+        <div class="value" id="battery">--</div>
+    </div>
+
+    <div class="data">
+        <div class="label">Last Received</div>
+        <div class="value small" id="received">--</div>
+    </div>
+
+    <button onclick="fetchLocation()">Refresh Location</button>
+
+</div>
+
+<script>
+
+async function fetchLocation() {
+
+    const status = document.getElementById("status");
+
+    try {
+
+        status.innerText = "Fetching latest location...";
+
+        const response = await fetch("/api/location", {
+            cache: "no-store"
+        });
+
+        const result = await response.json();
+
+        if (!response.ok || !result.success) {
+            status.innerText =
+                result.message || "No GPS location available";
+            return;
+        }
+
+        const data = result.location;
+
+        document.getElementById("latitude").innerText =
+            data.latitude;
+
+        document.getElementById("longitude").innerText =
+            data.longitude;
+
+        document.getElementById("imei").innerText =
+            data.imei || "--";
+
+        document.getElementById("speed").innerText =
+            data.speed != null ? data.speed : "--";
+
+        document.getElementById("battery").innerText =
+            data.battery != null ? data.battery : "--";
+
+        document.getElementById("received").innerText =
+            data.received_at
+                ? new Date(data.received_at).toLocaleString()
+                : "--";
+
+        status.innerText = "Location retrieved successfully";
+
+    } catch (error) {
+
+        status.innerText = "Connection failed: " + error.message;
+
+    }
+
+}
+
+// Load immediately
+fetchLocation();
+
+// Automatically refresh every 5 seconds
+setInterval(fetchLocation, 5000);
+
+</script>
+
+</body>
+</html>
